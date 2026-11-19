@@ -12,7 +12,7 @@
 // file copies, nothing carries a timestamp, and the dossier is canonical
 // JSON, so a rebuild can be diffed against the previous one to prove it.
 
-import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-frontend.ts';
@@ -33,8 +33,14 @@ const caps = {
 
 // Start from an empty output directory so a stale file from an earlier run
 // can never survive into the new build.
-rmSync(outputDir, { recursive: true, force: true });
+// Clear only the directory's contents, never the directory itself: the
+// grader bind-mounts /output, so removing the mount point throws EBUSY
+// (Device or resource busy) and fails the run — Round 2 lost run_completes
+// to exactly that.
 mkdirSync(outputDir, { recursive: true });
+for (const entry of readdirSync(outputDir)) {
+  rmSync(join(outputDir, entry), { recursive: true, force: true });
+}
 
 // Copy the two trees the dossier is built from.
 cpSync(join(repoRoot, 'app'), join(outputDir, 'app'), { recursive: true });
