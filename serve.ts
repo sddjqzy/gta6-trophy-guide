@@ -1,64 +1,95 @@
-// A tiny static server for app/ (Node 22, standard library only), so the guide can be run locally without a
-// build step: `node serve.ts` serves app/ on http://localhost:8080 (`--port <n>` for another port). It sends the MIME
-// types a browser needs, refuses any path outside app/, and otherwise does nothing clever: this is a development
-// convenience, not a web server for the internet.
+// Tiny static server for the trophy guide, for local previews only.
+//
+//   node serve.ts            serves app/ on http://localhost:8080
+//   node serve.ts --port 3000   serves it on port 3000 instead
+//
+// Node's standard library only. It answers GET and HEAD, sends the right
+// content type for the files the app uses, and refuses any path that would
+// climb out of app/.
+
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = resolve(fileURLToPath(new URL('./app', import.meta.url)));
-const args = process.argv.slice(2);
-const portIndex = args.indexOf('--port');
-const requested = portIndex === -1 ? 8080 : Number(args[portIndex + 1]);
-const port = Number.isInteger(requested) && requested > 0 && requested < 65536 ? requested : 8080;
+const appDir = resolve(join(fileURLToPath(new URL('.', import.meta.url)), 'app'));
 
-const MIME: Record<string, string> = {
+const TYPES = {
   '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
-  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
-  '.woff2': 'font/woff2',
-  '.webmanifest': 'application/manifest+json',
 };
 
-createServer((request, response) => {
-  const url = new URL(request.url ?? '/', 'http://localhost');
-  let pathname: string;
+function portFromArgs() {
+  const args = process.argv.slice(2);
+  const flag = args.indexOf('--port');
+  if (flag === -1) return 8080;
+  const value = Number.parseInt(args[flag + 1] ?? '', 10);
+  if (!Number.isInteger(value) || value < 1 || value > 65535) {
+    throw new Error('usage: node serve.ts [--port <number>]');
+  }
+  return value;
+}
+
+const port = portFromArgs();
+
+const server = createServer((req, res) => {
+  const method = req.method ?? 'GET';
+  if (method !== 'GET' && method !== 'HEAD') {
+    res.writeHead(405, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Method not allowed.\n');
+    return;
+  }
+
+  let path;
   try {
-    pathname = decodeURIComponent(url.pathname);
+    path = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname);
   } catch {
-    response.writeHead(400).end('bad request');
+    res.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Bad request.\n');
     return;
   }
-  if (pathname.endsWith('/')) pathname += 'index.html';
-  const file = resolve(join(root, normalize(pathname)));
-  if (file !== root && !file.startsWith(root + sep)) {
-    response.writeHead(403).end('forbidden');
+  if (path === '/') path = '/index.html';
+
+  // Join the request path onto app/ and check the result is still inside
+  // it: anything with .. that escapes the folder is refused outright.
+  const file = resolve(join(appDir, normalize(path).replace(/^(\.\.[/\\])+/, '')));
+  if (file !== appDir && !file.startsWith(appDir + sep)) {
+    res.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Forbidden.\n');
     return;
   }
-  let size: number;
+
+  let stat;
   try {
-    const stats = statSync(file);
-    if (!stats.isFile()) throw new Error('not a file');
-    size = stats.size;
+    stat = statSync(file);
   } catch {
-    response.writeHead(404).end('not found');
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Not found.\n');
     return;
   }
-  response.writeHead(200, {
-    'content-type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
-    'content-length': size,
-    'cache-control': 'no-store',
+  if (!stat.isFile()) {
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Not found.\n');
+    return;
+  }
+
+  res.writeHead(200, {
+    'content-type': TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream',
+    'content-length': stat.size,
+    'cache-control': 'no-cache',
   });
-  createReadStream(file).pipe(response);
-}).listen(port, '127.0.0.1', () => {
-  console.log(`app/ is on http://localhost:${port}`);
+  if (method === 'GET') createReadStream(file).pipe(res);
+  else res.end();
+});
+
+server.listen(port, () => {
+  console.log(`GTA VI trophy guide: http://localhost:${port}`);
 });
