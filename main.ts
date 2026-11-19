@@ -1,53 +1,50 @@
-// GTA VI trophy guide — build entrypoint.
+// Hands the GTA VI trophy guide in: copies this repository's app/ and
+// screenshots/ into the output directory and writes dossier.json there with
+// the vendored make.fun library, so the judge can read the entry.
 //
-// Copies the static app (app/) and its screenshots (screenshots/) into the
-// output directory, then writes dossier.json for that directory by calling
-// the make.fun frontend library. Node's standard library only, no build
-// step: run it with `node main.ts`.
+// Runs on Node 22 with the standard library only, no network, and it must
+// finish in 10 seconds. Outside the grader, MAKEFUN_OUTPUT_DIR stands in
+// for /output:
+//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 //
-//   MAKEFUN_OUTPUT_DIR=out node main.ts
-//
-// The output directory defaults to /output. Running the script twice over
-// the same inputs produces byte-identical outputs: the copies are plain
-// file copies, nothing carries a timestamp, and the dossier is canonical
-// JSON, so a rebuild can be diffed against the previous one to prove it.
+// The output directory is emptied entry by entry, never removed itself: the
+// grader mounts it as a bind mount, and removing a mount point fails with
+// EBUSY. So: create it, list what is inside it, and delete each child.
 
-import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-frontend.ts';
 
-// The folder this file lives in is the repository root: app/ and
-// screenshots/ sit next to it.
-const repoRoot = dirname(fileURLToPath(import.meta.url));
-const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const here = fileURLToPath(new URL('.', import.meta.url));
+const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-// The caps the bounty scores against: the text budget for the dossier, at
-// most four screenshots of at most 256 KiB each, and the app size limits.
-const caps = {
-  text_max_bytes: 163840,
-  screenshots: { max: 4, max_bytes: 262144 },
-  app_max_files: 993,
-  app_max_bytes: 50331648,
-};
-
-// Start from an empty output directory so a stale file from an earlier run
-// can never survive into the new build.
-// Clear only the directory's contents, never the directory itself: the
-// grader bind-mounts /output, so removing the mount point throws EBUSY
-// (Device or resource busy) and fails the run — Round 2 lost run_completes
-// to exactly that.
-mkdirSync(outputDir, { recursive: true });
-for (const entry of readdirSync(outputDir)) {
-  rmSync(join(outputDir, entry), { recursive: true, force: true });
+function emptyDirectorySafely(dir) {
+  mkdirSync(dir, { recursive: true });
+  for (const child of readdirSync(dir)) {
+    rmSync(join(dir, child), { recursive: true, force: true });
+  }
 }
 
-// Copy the two trees the dossier is built from.
-cpSync(join(repoRoot, 'app'), join(outputDir, 'app'), { recursive: true });
-cpSync(join(repoRoot, 'screenshots'), join(outputDir, 'screenshots'), { recursive: true });
+emptyDirectorySafely(outDir);
+if (!existsSync(join(here, 'app'))) {
+  throw new Error('app/ is missing from the repository — nothing to hand in');
+}
+cpSync(join(here, 'app'), join(outDir, 'app'), { recursive: true });
+if (existsSync(join(here, 'screenshots'))) {
+  cpSync(join(here, 'screenshots'), join(outDir, 'screenshots'), { recursive: true });
+}
 
-// Build the dossier from the copied trees and write it next to them.
-const dossier = buildDossier(outputDir, caps);
-writeFileSync(join(outputDir, 'dossier.json'), dossier);
+// The caps match the gate: at most 4 screenshots of 256 KiB, at most 993
+// files and 48 MiB under app/, and a dossier text of at most 160 KiB.
+writeFileSync(
+  join(outDir, 'dossier.json'),
+  buildDossier(outDir, {
+    text_max_bytes: 163840,
+    screenshots: { max: 4, max_bytes: 262144 },
+    app_max_files: 993,
+    app_max_bytes: 50331648,
+  }),
+);
 
-console.log(`Wrote ${join(outputDir, 'dossier.json')} (${dossier.length} bytes).`);
+console.log(`Wrote the GTA VI trophy guide to ${outDir}`);

@@ -3,103 +3,100 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GTA VI Trophy Guide — 55-Trophy Tracker</title>
-<meta name="description" content="A complete Grand Theft Auto VI trophy guide for PS5: all 55 trophies, a five-stage platinum roadmap, the one missable trophy, and a checklist tracker that saves in your browser.">
+<title>GTA VI Trophy Guide &amp; Tracker — All 55 Trophies</title>
+<meta name="description" content="A complete offline guide and tracker for all 55 Grand Theft Auto VI PlayStation 5 trophies: roadmap to the platinum, missable flags, spoiler-safe browsing and saved progress.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="hero">
-  <p class="eyebrow">Grand Theft Auto VI &middot; PS5 &middot; single-player only</p>
-  <h1>GTA VI Trophy Guide</h1>
-  <p class="lede">All 55 trophies — 1 platinum, 2 gold, 6 silver, 46 bronze — with a plain-English guide for each one, a five-stage road to the platinum, and a checklist that remembers what you have earned.</p>
-  <div class="progress" id="progress" aria-live="polite">
-    <div class="progress-text"><strong id="earned-count">0 / 55</strong> trophies earned <span id="earned-pct">· 0%</span></div>
-    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width: 0%"></div></div>
-    <p class="progress-grades" id="grade-counts"></p>
+<header class="masthead">
+  <div class="masthead-text">
+    <p class="kicker">Grand Theft Auto VI &middot; PlayStation 5 &middot; Leonida</p>
+    <h1>The Complete GTA VI Trophy Guide</h1>
+    <p class="subtitle">All 55 trophies — 1 platinum, 2 gold, 6 silver, 46 bronze — with a guide for each one, a roadmap to the platinum, and a tracker that remembers your progress.</p>
   </div>
-  <p class="platinum-note">Platinum: <strong>Vice Got a Price!</strong> — about 200 hours, no online trophies, no difficulty trophies, no mission medals.</p>
+  <div class="progress-card" id="progressCard">
+    <p class="progress-count"><span id="earnedCount">0</span> / <span id="totalCount">55</span> earned</p>
+    <div class="progress-bar" role="progressbar" aria-label="Trophies earned"><div class="progress-fill" id="progressFill"></div></div>
+    <p class="progress-note" id="progressNote">Your progress is saved in this browser.</p>
+    <div class="progress-actions">
+      <button id="exportBtn" type="button">Export progress</button>
+      <label class="import-label">Import progress <input id="importFile" type="file" accept="application/json,.json"></label>
+      <button id="resetBtn" type="button">Reset</button>
+    </div>
+  </div>
 </header>
 
-<main>
-  <section class="card" id="roadmap">
-    <h2>The platinum roadmap — five stages</h2>
-    <ol class="stages">
-      <li><h3>Stage 1 — Chapter 1: protect the missable</h3>
-        <p>Do Lucia&rsquo;s balcony meditation before Chapter 1 ends — it feeds <strong>Positive Mental Attitude</strong> and never comes back. Keep a manual save at the start of every chapter; there is no mission replay.</p></li>
-      <li><h3>Stage 2 — Play the story</h3>
-        <p>All 12 story trophies pop as you play, including the gold for the final mission. Character switching opens after Breakfast Run in Chapter 2, which unlocks most of the free-roam list.</p></li>
-      <li><h3>Stage 3 — Robberies and partner trophies</h3>
-        <p>Jewelry stores, bank vaults, armored trucks and shop runs — several need Jason and Lucia together, so do them as a pair and let Hot Together and Retail Therapy fall out of the same jobs.</p></li>
-      <li><h3>Stage 4 — Activities and collectibles</h3>
-        <p>Stunts, races, shooting ranges, drone races, cards, WAiNK scans, vehicles and meditation spots. Fold the counting trophies into your exploring instead of saving them all for the end.</p></li>
-      <li><h3>Stage 5 — Cleanup and 100%</h3>
-        <p>After the credits, work the 100% checklist for <strong>A Long Road</strong>. Everything outside the story stays available, and the platinum pops the moment the last trophy does.</p></li>
-    </ol>
-    <p class="warning"><strong>Missable:</strong> Positive Mental Attitude — the Chapter 1 balcony meditation. <strong>Never use cheats</strong> on your trophy save: they switch off trophies and saving.</p>
-  </section>
+<nav class="view-tabs" aria-label="Views">
+  <button type="button" data-view="list" class="active">Trophy list</button>
+  <button type="button" data-view="roadmap">Roadmap to platinum</button>
+  <button type="button" data-view="missable">Missable trophies</button>
+  <button type="button" data-view="sources">Sources</button>
+</nav>
 
-  <section class="card controls" aria-label="Tracker controls">
-    <h2>Your tracker</h2>
-    <div class="control-row">
-      <label class="search">Search
-        <input type="search" id="search" placeholder="Search trophy names…" autocomplete="off">
-      </label>
-      <label class="select">Kind
-        <select id="kind-filter">
-          <option value="all">All kinds</option>
-          <option value="story">Story</option>
-          <option value="side">Side strands</option>
-          <option value="robbery">Robbery</option>
-          <option value="collectible">Collectible</option>
-          <option value="activity">Activity</option>
-          <option value="exploration">Exploration</option>
-          <option value="money">Money</option>
-          <option value="combat">Combat</option>
-          <option value="moment">One-off moments</option>
-          <option value="completion">100% completion</option>
-          <option value="platinum">Platinum</option>
-        </select>
-      </label>
-    </div>
-    <div class="grade-filters" id="grade-filters" role="group" aria-label="Filter by grade">
-      <button type="button" data-grade="all" class="grade-btn active" aria-pressed="true">All</button>
-      <button type="button" data-grade="platinum" class="grade-btn" aria-pressed="false">Platinum</button>
-      <button type="button" data-grade="gold" class="grade-btn" aria-pressed="false">Gold</button>
-      <button type="button" data-grade="silver" class="grade-btn" aria-pressed="false">Silver</button>
-      <button type="button" data-grade="bronze" class="grade-btn" aria-pressed="false">Bronze</button>
-    </div>
-    <div class="control-row toggles">
-      <label class="check"><input type="checkbox" id="spoiler-free"> Spoiler-free mode <span class="hint">hides names and guides of hidden trophies you have not earned yet</span></label>
-      <label class="check"><input type="checkbox" id="earned-only"> Earned only</label>
-      <label class="check"><input type="checkbox" id="missable-only"> Missable only</label>
-    </div>
-    <div class="control-row actions">
-      <button type="button" id="export-btn">Export checklist</button>
-      <button type="button" id="import-btn">Import checklist</button>
-      <input type="file" id="import-file" accept="application/json,.json" hidden>
-      <button type="button" id="reset-btn">Reset checklist</button>
-      <span class="saved-note" id="saved-note" aria-live="polite"></span>
-    </div>
-    <p class="storage-note">Your checklist is stored only in this browser (localStorage). Export it to keep a backup or move it to another machine.</p>
-  </section>
+<section id="view-list" class="view">
+  <div class="controls" aria-label="Filters">
+    <label class="search-label">Search <input id="searchBox" type="search" placeholder="Name, mission or keyword…" autocomplete="off"></label>
+    <label>Grade
+      <select id="gradeFilter">
+        <option value="all">All grades</option>
+        <option value="platinum">Platinum</option>
+        <option value="gold">Gold</option>
+        <option value="silver">Silver</option>
+        <option value="bronze">Bronze</option>
+      </select>
+    </label>
+    <label>Kind
+      <select id="kindFilter">
+        <option value="all">All kinds</option>
+        <option value="story">Story</option>
+        <option value="mission">Missions &amp; strangers</option>
+        <option value="collectible">Collectibles</option>
+        <option value="activity">Activities</option>
+        <option value="exploration">Exploration</option>
+        <option value="combat">Combat &amp; robberies</option>
+        <option value="economy">Money &amp; property</option>
+        <option value="misc">Odd ones out</option>
+      </select>
+    </label>
+    <label class="check-label"><input id="missableOnly" type="checkbox"> Missable only</label>
+    <label class="check-label"><input id="hideEarned" type="checkbox"> Hide earned</label>
+    <label class="check-label spoiler-label"><input id="spoilerToggle" type="checkbox" checked> Spoiler-safe mode</label>
+  </div>
+  <p class="filter-note" id="filterNote"></p>
+  <p class="spoiler-note" id="spoilerNote">Spoiler-safe mode is on: story trophy names and descriptions stay hidden until you earn them. Turn it off to see everything.</p>
+  <p class="filter-note">Note: this list holds no online trophies, so every trophy here can be earned solo, offline.</p>
+  <ol class="trophy-list" id="trophyList"></ol>
+</section>
 
-  <section id="trophy-list-section" aria-label="Trophy list">
-    <p class="list-meta" id="list-meta"></p>
-    <ul class="trophy-list" id="trophy-list"></ul>
-    <p class="empty" id="empty-state" hidden>No trophies match these filters. Loosen the search or pick another grade or kind.</p>
-    <p class="load-error" id="load-error" hidden>Could not load the trophy data. Check that <code>data/trophies.json</code> sits next to this page and reload.</p>
-  </section>
+<section id="view-roadmap" class="view" hidden>
+  <h2>Roadmap to the platinum</h2>
+  <p class="roadmap-intro">Five stages, in order. Work a stage to the end before moving on, and the platinum arrives with the 100% completion gold. The counts below come from the official trophy descriptions.</p>
+  <ol class="roadmap" id="roadmapList"></ol>
+</section>
 
-  <section class="card sources">
-    <h2>Sources</h2>
-    <p>Trophy names and descriptions are the published lists cross-checked across OutputLag&rsquo;s GTA 6 trophy list, planetgta6&rsquo;s list (checked against Exophase, PSNProfiles and TrueAchievements), PowerPyx and GTABase. The guides above are written for this page. The list itself has not been checked against PlayStation Network directly.</p>
-  </section>
-</main>
+<section id="view-missable" class="view" hidden>
+  <h2>Missable trophies — do these on your first run</h2>
+  <p class="roadmap-intro">No trophy here is permanently missable if mission replay counts, but each of these belongs to one specific mission, moment or choice. Do them the first time the chance comes up and you will never need a second playthrough for them.</p>
+  <ol class="trophy-list" id="missableList"></ol>
+</section>
+
+<section id="view-sources" class="view" hidden>
+  <h2>Sources</h2>
+  <p>Every trophy name, description and grade on this page is the official one, as PlayStation publishes it. Every guide is written for this page, in its own words. The facts behind the guides come from:</p>
+  <ul class="source-list" id="sourceList"></ul>
+  <p class="source-note">A source is cited, never copied. Where a guide's method comes from community knowledge rather than the official description, the trophy's own source line says so.</p>
+</section>
+
+<dialog id="detailDialog" class="detail-dialog">
+  <form method="dialog" class="detail-close"><button type="submit" aria-label="Close">✕</button></form>
+  <div id="detailBody"></div>
+</dialog>
 
 <footer>
-  <p>GTA VI trophy guide — a fan-made checklist. Grand Theft Auto and GTA are trademarks of Take-Two Interactive. Not affiliated with Rockstar Games.</p>
+  <p>Unofficial fan guide. Grand Theft Auto, GTA and Rockstar Games are trademarks of Take-Two Interactive. No Rockstar logo, artwork or game screenshot is used here.</p>
+  <p>Works fully offline — every file it loads lives in this folder.</p>
 </footer>
 
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>
